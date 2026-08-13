@@ -49,6 +49,34 @@ vector DB later with only the storage layer swapped.
 - **Hybrid from day one.** Filters and semantic ranking are in the same SQL query,
   so adding a reranker (e.g. Cohere Rerank) later is an app-layer change only.
 
+## Version control & push
+
+This folder is a git repository (`main` branch) with an initial commit already
+made. The `origin` remote points at:
+
+    https://github.com/greenmonkeytroy/ai-search.git
+
+To push from your own machine (VS Code terminal, in this folder):
+
+```bash
+git push -u origin main       # first push; sets main to track origin
+# VS Code will use your GitHub login, or prompt to authorize
+```
+
+After pushing, future changes are just:
+
+```bash
+git add -A
+git commit -m "your message"
+git push
+```
+
+### Verify the push worked
+1. Refresh the GitHub repo page — you should see all 14 files.
+2. Confirm `.env` is NOT listed on GitHub (only `.env.example`). It is
+   git-ignored; never commit real secrets.
+3. Confirm there is no `node_modules/` on GitHub.
+
 ## Next steps to consider
 
 - Add a reranking pass over the top ~50 vector hits for higher precision.
