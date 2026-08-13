@@ -39,8 +39,21 @@ def _clip():
     return SentenceTransformer("clip-ViT-B-32")  # 512 dims — matches schema.sql
 
 
+_IMAGE_HEADERS = {"User-Agent": "ai-search-prototype/0.1 (local dev)"}
+
+
 def embed_image(image_url: str) -> list[float]:
-    img = Image.open(BytesIO(requests.get(image_url, timeout=30).content))
+    # Some hosts (e.g. Wikimedia) reject requests with no/default User-Agent,
+    # and briefly rate-limit bursts of requests — retry once with backoff.
+    import time
+    for attempt in range(3):
+        resp = requests.get(image_url, timeout=30, headers=_IMAGE_HEADERS)
+        if resp.status_code == 429 and attempt < 2:
+            time.sleep(2 * (attempt + 1))
+            continue
+        resp.raise_for_status()
+        break
+    img = Image.open(BytesIO(resp.content))
     return _clip().encode(img).tolist()
 
 
