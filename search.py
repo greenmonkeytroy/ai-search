@@ -36,7 +36,7 @@ def _conn():
 )
 def search(
     business: str = Query(..., description="Free-text description of the kind of business/location you want — embedded and used to rank results semantically (not a name filter).", example="coastal fabrication with dock access"),
-    region: str | None = Query(None, description="Exact match on the state/region field.", example="Whyalla"),
+    region: str | None = Query(None, description="Case-insensitive exact match on the state/region field.", example="Whyalla"),
     resource: str | None = Query(None, description="Partial match on the industry/resource type.", example="Warehousing"),
     k: int = Query(10, description="Max number of results to return.", ge=1, le=100, example=10),
 ):
@@ -45,7 +45,7 @@ def search(
     where = ["TRUE"]
     params = {"qvec": qvec, "k": k}
     if region:
-        where.append("l.state = %(region)s"); params["region"] = region
+        where.append("l.state ILIKE %(region)s"); params["region"] = region.strip()
     if resource:
         where.append("l.industry_name ILIKE %(resource)s"); params["resource"] = f"%{resource}%"
 
