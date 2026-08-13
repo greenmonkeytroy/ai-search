@@ -44,8 +44,11 @@ vector DB later with only the storage layer swapped.
    export DATABASE_URL=postgresql://postgres@localhost/search_proto
    python ingest.py sample_data.csv
    uvicorn search:app --reload
-   # http://localhost:8000/search?q=coastal%20fabrication%20with%20dock&state=FL
+   # http://localhost:8000/search?business=fabrication&state=FL&resource=metal
    ```
+   `/search` takes three filters: `business` (required — matched against the
+   name and used to rank results semantically), `state`, and `resource`
+   (matched against industry). `k` controls result count (default 10).
 
 ## Why this scales
 

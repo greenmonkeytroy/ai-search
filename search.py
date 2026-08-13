@@ -1,9 +1,9 @@
 """
-Hybrid search API. The core idea: hard filters (state, industry, radius) in the
-SQL WHERE clause, semantic ranking via the vector distance operator (<=>).
+Hybrid search API. The core idea: hard filters (state, resource) in the SQL
+WHERE clause, semantic ranking via the vector distance operator (<=>).
 
 Run:  uvicorn search:app --reload
-Then: GET /search?q=coastal manufacturing site&state=FL&radius_km=50&lon=-81.6&lat=30.3
+Then: GET /search?business=coastal fabrication with dock&state=FL&resource=metal
       GET /image_search?q=aerial view of a port
 """
 import os
@@ -23,19 +23,15 @@ def _conn():
 
 
 @app.get("/search")
-def search(q: str, state: str | None = None, industry_code: str | None = None,
-           lon: float | None = None, lat: float | None = None,
-           radius_km: float | None = None, k: int = 10):
-    qvec = embed_text(q)
+def search(business: str, state: str | None = None, resource: str | None = None, k: int = 10):
+    qvec = embed_text(business)
 
-    where, params = ["TRUE"], {"qvec": qvec, "k": k}
+    where = ["name ILIKE %(business)s"]
+    params = {"business": f"%{business}%", "qvec": qvec, "k": k}
     if state:
         where.append("state = %(state)s"); params["state"] = state
-    if industry_code:
-        where.append("industry_code = %(ind)s"); params["ind"] = industry_code
-    if lon is not None and lat is not None and radius_km is not None:
-        where.append("ST_DWithin(geom, ST_MakePoint(%(lon)s, %(lat)s)::geography, %(rad)s)")
-        params.update(lon=lon, lat=lat, rad=radius_km * 1000)
+    if resource:
+        where.append("industry_name ILIKE %(resource)s"); params["resource"] = f"%{resource}%"
 
     sql = f"""
         SELECT id, name, industry_name, state,

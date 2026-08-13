@@ -1,6 +1,11 @@
 name,description,industry_code,industry_name,state,lon,lat,image_url
-Gulfview Fabrication Yard,Waterfront metal fabrication facility with deepwater dock access,332312,Fabricated Structural Metal Manufacturing,FL,-81.65,30.33,
-Piedmont Logistics Hub,Inland distribution center near major rail interchange,493110,General Warehousing and Storage,NC,-80.84,35.22,
-Bayou Chemical Works,Coastal specialty chemical plant with barge terminal,325199,Industrial Organic Chemical Manufacturing,LA,-91.15,30.22,
-Summit Cold Storage,Refrigerated warehouse serving regional grocery chains,493120,Refrigerated Warehousing and Storage,TN,-86.78,36.16,
-Harbor Point Shipyard,Full-service vessel repair and drydock on the coast,336611,Ship Building and Repairing,FL,-82.45,27.95,
+Whyalla Steelworks,Integrated steelworks and rolling mill supplying structural steel to national infrastructure projects,2110,Iron and Steel Manufacturing,Whyalla,137.58,-33.02,https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=640
+Port Pirie Smelter,Primary lead and zinc smelting and refining operation on the Spencer Gulf,2131,Primary Metal Smelting and Refining,Port Pirie,138.02,-33.19,https://images.unsplash.com/photo-1565008447742-97f6f38c985c?w=640
+Osborne Naval Shipyard,Commonwealth naval shipbuilding yard delivering surface fleet and submarine construction,2391,Ship Building and Repairing,Port Adelaide,138.48,-34.79,https://images.unsplash.com/photo-1587293852726-70cdb56c2866?w=640
+Tonsley Fabrication Works,Advanced manufacturing precinct producing structural steel components and fabricated assemblies,2211,Fabricated Structural Metal Manufacturing,Tonsley,138.56,-35.03,https://images.unsplash.com/photo-1553413077-190dd305871c?w=640
+Regency Park Distribution Centre,Metropolitan Adelaide distribution centre serving statewide retail and grocery supply chains,6610,General Warehousing and Storage,Regency Park,138.57,-34.87,https://images.unsplash.com/photo-1516937941344-00b4e0337589?w=640
+Gawler Logistics Hub,Northern Adelaide logistics facility near the Sturt Highway and rail freight corridor,6610,General Warehousing and Storage,Gawler,138.74,-34.60,https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=640
+Riverland Cold Storage,Refrigerated warehouse supporting Riverland citrus almond and wine grape cold-chain exports,6610,Refrigerated Warehousing and Storage,Riverland,140.59,-34.28,https://images.unsplash.com/photo-1494412651409-8963ce7935a7?w=640
+Limestone Coast Cold Store,Cold storage facility serving Limestone Coast dairy timber and produce exporters,6610,Refrigerated Warehousing and Storage,Mount Gambier,140.78,-37.83,https://images.unsplash.com/photo-1590959651373-a3db0f38a961?w=640
+Port Lincoln Grain Terminal,Bulk grain receival and export terminal on the Eyre Peninsula coast,6612,Grain Storage and Handling,Port Lincoln,135.87,-34.73,https://images.unsplash.com/photo-1601058268499-e52658b8bb88?w=640
+Olympic Dam Mine Services,Remote mine-site logistics and materials handling support for copper uranium and gold operations,0714,Copper Uranium and Gold Mining,Roxby Downs,136.89,-30.56,https://images.unsplash.com/photo-1605902711834-8b11c3e3ef2f?w=640
