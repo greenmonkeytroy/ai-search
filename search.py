@@ -8,6 +8,7 @@ Then: GET /search?business=coastal fabrication with dock&region=FL&resource=meta
 """
 import os
 from fastapi import FastAPI, Query
+from fastapi.staticfiles import StaticFiles
 import psycopg
 from pgvector.psycopg import register_vector
 from embeddings import embed_text, embed_text_for_clip
@@ -44,16 +45,20 @@ def search(
     where = ["TRUE"]
     params = {"qvec": qvec, "k": k}
     if region:
-        where.append("state = %(region)s"); params["region"] = region
+        where.append("l.state = %(region)s"); params["region"] = region
     if resource:
-        where.append("industry_name ILIKE %(resource)s"); params["resource"] = f"%{resource}%"
+        where.append("l.industry_name ILIKE %(resource)s"); params["resource"] = f"%{resource}%"
 
     sql = f"""
-        SELECT id, name, industry_name, state,
-               1 - (text_embedding <=> %(qvec)s::vector) AS score
-        FROM locations
+        SELECT l.id, l.name, l.industry_name, l.state, img.image_url,
+               1 - (l.text_embedding <=> %(qvec)s::vector) AS score
+        FROM locations l
+        LEFT JOIN LATERAL (
+            SELECT image_url FROM location_images
+            WHERE location_id = l.id LIMIT 1
+        ) img ON TRUE
         WHERE {' AND '.join(where)}
-        ORDER BY text_embedding <=> %(qvec)s::vector   -- cosine distance, nearest first
+        ORDER BY l.text_embedding <=> %(qvec)s::vector   -- cosine distance, nearest first
         LIMIT %(k)s
     """
     with _conn() as conn, conn.cursor() as cur:
@@ -85,3 +90,8 @@ def image_search(
         cur.execute(sql, {"qvec": qvec, "k": k})
         cols = [c.name for c in cur.description]
         return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+
+# Serves static/index.html at "/" — defined last so it doesn't shadow the
+# /search and /image_search API routes above.
+app.mount("/", StaticFiles(directory="static", html=True), name="static")

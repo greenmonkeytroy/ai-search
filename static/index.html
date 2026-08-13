@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Search Prototype</title>
+<style>
+  :root {
+    --bg: #f4f6f8;
+    --surface: #ffffff;
+    --border: #e2e6ea;
+    --text: #1b2430;
+    --text-muted: #6b7684;
+    --accent: #1f5f8b;
+    --accent-hover: #17466a;
+    --pill-bg: #eaf1f6;
+    --pill-text: #1f5f8b;
+    --score-track: #e9edf1;
+    --score-high: #2e8540;
+    --score-medium: #c17f0a;
+    --score-low: #d1453d;
+    --badge-bg: #f5b942;
+    --badge-text: #3a2900;
+    --shadow: 0 1px 2px rgba(16, 24, 32, 0.06), 0 4px 12px rgba(16, 24, 32, 0.05);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  header {
+    padding: 2.5rem 1.5rem 1.5rem;
+    text-align: center;
+  }
+
+  header h1 {
+    margin: 0 0 0.4rem;
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  form {
+    max-width: 900px;
+    margin: 1.5rem auto 0;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 0.6rem;
+  }
+
+  @media (max-width: 720px) {
+    form { grid-template-columns: 1fr; }
+  }
+
+  input {
+    font: inherit;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(31, 95, 139, 0.12);
+  }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    padding: 0.65rem 1.3rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    cursor: pointer;
+  }
+
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: 0.6; cursor: default; }
+
+  main {
+    max-width: 1100px;
+    margin: 2rem auto 4rem;
+    padding: 0 1.5rem;
+  }
+
+  #status {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 3rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  #results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: var(--score-track);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .badge {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    z-index: 1;
+    background: var(--badge-bg);
+    color: var(--badge-text);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .card-media .no-photo {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .card-body {
+    padding: 0.95rem 1.1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  .card-body h3 {
+    margin: 0;
+    font-size: 1.02rem;
+    line-height: 1.3;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .pill {
+    background: var(--pill-bg);
+    color: var(--pill-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .region {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .score-row {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .score-track {
+    flex: 1;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--score-track);
+    overflow: hidden;
+  }
+
+  .score-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 999px;
+  }
+
+  .score-high { color: var(--score-high); }
+  .score-medium { color: var(--score-medium); }
+  .score-low { color: var(--score-low); }
+
+  .score-fill.score-high { background: var(--score-high); }
+  .score-fill.score-medium { background: var(--score-medium); }
+  .score-fill.score-low { background: var(--score-low); }
+
+  #error-banner {
+    display: none;
+    max-width: 900px;
+    margin: 0 auto 1.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    background: #fdecec;
+    color: #9c2b2b;
+    font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AI Search Prototype</h1>
+  <p>Semantic search over South Australian industrial sites — powered by Postgres + pgvector</p>
+</header>
+
+<form id="search-form">
+  <input id="business" type="text" placeholder="Describe the kind of site you're looking for…" required>
+  <input id="region" type="text" placeholder="Region (e.g. Whyalla)">
+  <input id="resource" type="text" placeholder="Resource (e.g. Warehousing)">
+  <button type="submit" id="submit-btn">Search</button>
+</form>
+
+<main>
+  <div id="error-banner"></div>
+  <div id="status">Enter a description above to search — e.g. "coastal fabrication with dock access".</div>
+  <div id="results"></div>
+</main>
+
+<script>
+  const form = document.getElementById('search-form');
+  const statusEl = document.getElementById('status');
+  const resultsEl = document.getElementById('results');
+  const errorEl = document.getElementById('error-banner');
+  const submitBtn = document.getElementById('submit-btn');
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function scoreClass(pct) {
+    if (pct >= 40) return 'score-high';
+    if (pct >= 16) return 'score-medium';
+    return 'score-low';
+  }
+
+  function renderCard(loc, index) {
+    const pct = Math.round(loc.score * 100);
+    const barWidth = Math.max(0, Math.min(100, pct));
+    const tier = scoreClass(pct);
+    const badge = index < 3 ? `<span class="badge">★ Best Match</span>` : '';
+    const media = loc.image_url
+      ? `<img src="${escapeHtml(loc.image_url)}" alt="${escapeHtml(loc.name)}" loading="lazy">`
+      : `<div class="no-photo">No photo available</div>`;
+
+    return `
+      <div class="card">
+        <div class="card-media">${badge}${media}</div>
+        <div class="card-body">
+          <h3>${escapeHtml(loc.name)}</h3>
+          <div class="meta-row">
+            <span class="pill">${escapeHtml(loc.industry_name || 'Unclassified')}</span>
+            <span class="region">${escapeHtml(loc.state || '')}</span>
+          </div>
+          <div class="score-row">
+            <span class="${tier}">${pct}% match</span>
+            <div class="score-track"><div class="score-fill ${tier}" style="width:${barWidth}%"></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function runSearch(e) {
+    e.preventDefault();
+    const business = document.getElementById('business').value.trim();
+    const region = document.getElementById('region').value.trim();
+    const resource = document.getElementById('resource').value.trim();
+    if (!business) return;
+
+    const params = new URLSearchParams({ business, k: 12 });
+    if (region) params.set('region', region);
+    if (resource) params.set('resource', resource);
+
+    errorEl.style.display = 'none';
+    resultsEl.innerHTML = '';
+    statusEl.style.display = 'block';
+    statusEl.textContent = 'Searching…';
+    submitBtn.disabled = true;
+
+    try {
+      const res = await fetch('/search?' + params.toString());
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail ? JSON.stringify(body.detail) : `Search failed (${res.status})`);
+      }
+      const data = await res.json();
+      if (data.length === 0) {
+        statusEl.textContent = 'No results found. Try a different description or fewer filters.';
+        return;
+      }
+      statusEl.style.display = 'none';
+      resultsEl.innerHTML = data.map((loc, i) => renderCard(loc, i)).join('');
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+      statusEl.style.display = 'none';
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  form.addEventListener('submit', runSearch);
+</script>
+
+</body>
+</html>
