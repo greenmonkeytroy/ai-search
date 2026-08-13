@@ -2,29 +2,28 @@
 Embedding helpers. Swap these two functions to change providers — nothing
 else in the prototype needs to change.
 
-Default: OpenAI for text, CLIP (via sentence-transformers) for images.
-Fully-local alternative is noted inline.
+Default: local sentence-transformers for text, CLIP (also sentence-
+transformers) for images. Hosted OpenAI alternative is noted inline.
 """
-import os
 from functools import lru_cache
 
-# ---- TEXT: OpenAI (hosted API, no GPU needed) -----------------------------
-# pip install openai
-from openai import OpenAI
+# ---- TEXT: local sentence-transformers model (no API key, no GPU needed) --
+# pip install sentence-transformers
+from sentence_transformers import SentenceTransformer
 
-_openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-TEXT_MODEL = "text-embedding-3-small"  # 1536 dims — matches schema.sql
+_txt = SentenceTransformer("all-MiniLM-L6-v2")  # 384 dims — matches schema.sql
 
 
 def embed_text(text: str) -> list[float]:
-    resp = _openai.embeddings.create(model=TEXT_MODEL, input=text)
-    return resp.data[0].embedding
+    return _txt.encode(text).tolist()
 
 
-# Fully-local text alternative (no API key). Set text_embedding VECTOR(384).
-# from sentence_transformers import SentenceTransformer
-# _txt = SentenceTransformer("all-MiniLM-L6-v2")
-# def embed_text(text): return _txt.encode(text).tolist()
+# Hosted alternative: OpenAI text-embedding-3-small (1536 dims, needs
+# OPENAI_API_KEY). Set text_embedding VECTOR(1536) in schema.sql to use it.
+# from openai import OpenAI
+# _openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# def embed_text(text):
+#     return _openai.embeddings.create(model="text-embedding-3-small", input=text).data[0].embedding
 
 
 # ---- IMAGES: CLIP, shared text+image space (runs locally on CPU) ----------

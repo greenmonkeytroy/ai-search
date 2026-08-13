@@ -17,10 +17,10 @@ CREATE TABLE IF NOT EXISTS locations (
     created_at    TIMESTAMPTZ DEFAULT now(),
 
     -- Text embedding. Dimension MUST match your model:
+    --   sentence-transformers all-MiniLM-L6-v2 = 384 (default, local)
     --   OpenAI text-embedding-3-small = 1536
     --   Voyage voyage-3               = 1024
-    --   sentence-transformers all-MiniLM-L6-v2 = 384
-    text_embedding  VECTOR(1536)
+    text_embedding  VECTOR(384)
 );
 
 -- One row per image, linked to a location. Kept in its own table because a

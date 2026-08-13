@@ -10,7 +10,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# torch (pulled in by sentence-transformers) defaults to CUDA-bundled wheels
+# even though this service only ever does CPU inference — install the CPU
+# build first so requirements.txt's unpinned torch constraint is already
+# satisfied and pip doesn't fetch the multi-GB GPU variant.
+RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch \
+    && pip install --no-cache-dir -r requirements.txt
 
 COPY embeddings.py ingest.py search.py ./
 

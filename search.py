@@ -12,7 +12,7 @@ import psycopg
 from pgvector.psycopg import register_vector
 from embeddings import embed_text, embed_text_for_clip
 
-DSN = os.environ.get("DATABASE_URL", "postgresql://localhost/search_proto")
+DSN = os.environ.get("DATABASE_URL", "postgresql://postgres@localhost/search_proto")
 app = FastAPI()
 
 
@@ -39,10 +39,10 @@ def search(q: str, state: str | None = None, industry_code: str | None = None,
 
     sql = f"""
         SELECT id, name, industry_name, state,
-               1 - (text_embedding <=> %(qvec)s) AS score
+               1 - (text_embedding <=> %(qvec)s::vector) AS score
         FROM locations
         WHERE {' AND '.join(where)}
-        ORDER BY text_embedding <=> %(qvec)s   -- cosine distance, nearest first
+        ORDER BY text_embedding <=> %(qvec)s::vector   -- cosine distance, nearest first
         LIMIT %(k)s
     """
     with _conn() as conn, conn.cursor() as cur:
@@ -57,9 +57,9 @@ def image_search(q: str, k: int = 10):
     qvec = embed_text_for_clip(q)
     sql = """
         SELECT i.id, i.image_url, l.name,
-               1 - (i.image_embedding <=> %(qvec)s) AS score
+               1 - (i.image_embedding <=> %(qvec)s::vector) AS score
         FROM location_images i JOIN locations l ON l.id = i.location_id
-        ORDER BY i.image_embedding <=> %(qvec)s
+        ORDER BY i.image_embedding <=> %(qvec)s::vector
         LIMIT %(k)s
     """
     with _conn() as conn, conn.cursor() as cur:

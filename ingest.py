@@ -13,7 +13,7 @@ import psycopg
 from pgvector.psycopg import register_vector
 from embeddings import embed_text, embed_image
 
-DSN = os.environ.get("DATABASE_URL", "postgresql://localhost/search_proto")
+DSN = os.environ.get("DATABASE_URL", "postgresql://postgres@localhost/search_proto")
 
 
 def ingest(csv_path: str):

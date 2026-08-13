@@ -9,30 +9,39 @@ vector DB later with only the storage layer swapped.
 | File | Purpose |
 |---|---|
 | `schema.sql` | Tables, vector columns, HNSW + geo indexes |
-| `embeddings.py` | Text (OpenAI) + image (CLIP) embedding helpers — swap providers here |
+| `embeddings.py` | Text (local sentence-transformers) + image (CLIP) embedding helpers — swap providers here |
 | `ingest.py` | Read a CSV, embed rows, insert into Postgres |
 | `search.py` | FastAPI hybrid search + text-to-image search endpoints |
 | `sample_data.csv` | 5 example records to smoke-test |
+| `postgres.Dockerfile` | Local dev Postgres image with pgvector + postgis |
 
 ## Setup (about 15 minutes)
 
-1. **Postgres with extensions.** Easiest is Docker:
+1. **Postgres with extensions.** `schema.sql` needs both pgvector and postgis,
+   and no single official image ships both — `postgres.Dockerfile` builds one
+   from `pgvector/pgvector:pg16` plus the postgis apt package. The container's
+   default role is `postgres` (trust auth, no password), which is what
+   `DATABASE_URL` below assumes. Applying the schema doesn't require a `psql`
+   client on the host — pipe it into the container instead:
    ```bash
+   docker build -t pgv-postgis -f postgres.Dockerfile .
    docker run -d --name pgv -e POSTGRES_DB=search_proto \
-     -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust pgvector/pgvector:pg16
-   # postgis: use the `postgis/postgis` image, or `CREATE EXTENSION postgis` if available
-   psql postgresql://localhost/search_proto -f schema.sql
+     -p 5432:5432 -e POSTGRES_HOST_AUTH_METHOD=trust pgv-postgis
+   docker exec -i pgv psql -U postgres -d search_proto < schema.sql
    ```
 
 2. **Python deps.**
    ```bash
-   pip install "psycopg[binary]" pgvector openai sentence-transformers pillow \
-     requests fastapi uvicorn
-   export OPENAI_API_KEY=sk-...        # or switch to the local model in embeddings.py
+   pip install -r requirements.txt
    ```
+   The default text embedding model (`all-MiniLM-L6-v2`, in `embeddings.py`)
+   runs locally — no API key needed. Only set `OPENAI_API_KEY` if you switch
+   to the commented-out OpenAI alternative (and update `VECTOR(n)` in
+   `schema.sql` to match its dimension).
 
 3. **Ingest + search.**
    ```bash
+   export DATABASE_URL=postgresql://postgres@localhost/search_proto
    python ingest.py sample_data.csv
    uvicorn search:app --reload
    # http://localhost:8000/search?q=coastal%20fabrication%20with%20dock&state=FL
@@ -43,9 +52,9 @@ vector DB later with only the storage layer swapped.
 - **HNSW indexing** in pgvector handles low-millions of rows well. When you outgrow
   it, move only the vector column to Pinecone / Weaviate / Qdrant — Postgres stays
   the source of truth and the query shape barely changes.
-- **Embedding provider is one function.** Swap the hosted API for a self-hosted
-  model without touching ingest/search logic. (Change the `VECTOR(n)` dimension in
-  `schema.sql` to match the new model.)
+- **Embedding provider is one function.** Swap the local model for a hosted API
+  (or vice versa) without touching ingest/search logic. (Change the `VECTOR(n)`
+  dimension in `schema.sql` to match the new model.)
 - **Hybrid from day one.** Filters and semantic ranking are in the same SQL query,
   so adding a reranker (e.g. Cohere Rerank) later is an app-layer change only.
 
@@ -72,7 +81,7 @@ git push
 ```
 
 ### Verify the push worked
-1. Refresh the GitHub repo page — you should see all 14 files.
+1. Refresh the GitHub repo page — you should see all 15 files.
 2. Confirm `.env` is NOT listed on GitHub (only `.env.example`). It is
    git-ignored; never commit real secrets.
 3. Confirm there is no `node_modules/` on GitHub.
