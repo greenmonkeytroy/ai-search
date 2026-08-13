@@ -4,6 +4,29 @@ A minimal, runnable starter for semantic + hybrid search over location, industry
 and image data. Prototype today on a laptop; the same code scales to a dedicated
 vector DB later with only the storage layer swapped.
 
+## Quick start (demo day)
+
+Assumes the `pgv` container and Python deps are already set up (see full
+[Setup](#setup-about-15-minutes) below for a from-scratch machine).
+
+```bash
+docker start pgv
+export DATABASE_URL=postgresql://postgres@localhost/search_proto
+python -m uvicorn search:app --port 8000
+```
+
+(If `uvicorn` isn't on PATH — common on Windows — `python -m uvicorn` avoids
+that; use `py -m uvicorn` specifically if `python` itself isn't found.)
+
+Open **http://localhost:8000/** — that's the whole demo: a search box, real
+photos, and green/amber/red match scoring. Try `shipyard with dock access`
+or `bulk grain export terminal`.
+
+This is a **local-only URL** — there's no public/hosted deployment yet, so
+the demo has to run from this machine (or be screen-shared). To stop:
+`Ctrl+C` the server; the `pgv` container can stay running or be stopped with
+`docker stop pgv`.
+
 ## What's here
 
 | File | Purpose |
