@@ -1,9 +1,9 @@
 """
-Hybrid search API. The core idea: hard filters (state, resource) in the SQL
+Hybrid search API. The core idea: hard filters (region, resource) in the SQL
 WHERE clause, semantic ranking via the vector distance operator (<=>).
 
 Run:  uvicorn search:app --reload
-Then: GET /search?business=coastal fabrication with dock&state=FL&resource=metal
+Then: GET /search?business=coastal fabrication with dock&region=FL&resource=metal
       GET /image_search?q=aerial view of a port
 """
 import os
@@ -27,23 +27,23 @@ def _conn():
 
 @app.get(
     "/search",
-    summary="Search locations by business, state, and resource",
-    description="Filters `locations` by business name and (optionally) state/resource, "
+    summary="Search locations by business, region, and resource",
+    description="Filters `locations` by business name and (optionally) region/resource, "
                 "then ranks matches by semantic similarity between `business` and each "
                 "record's embedded description.",
 )
 def search(
-    business: str = Query(..., description="Business/location name (partial match) — also embedded and used to rank results semantically.", examples=["Steelworks"]),
-    state: str | None = Query(None, description="Exact match on the state/region field.", examples=["Whyalla"]),
-    resource: str | None = Query(None, description="Partial match on the industry/resource type.", examples=["Warehousing"]),
-    k: int = Query(10, description="Max number of results to return.", ge=1, le=100),
+    business: str = Query(..., description="Business/location name (partial match) — also embedded and used to rank results semantically.", example="Steelworks"),
+    region: str | None = Query(None, description="Exact match on the state/region field.", example="Whyalla"),
+    resource: str | None = Query(None, description="Partial match on the industry/resource type.", example="Warehousing"),
+    k: int = Query(10, description="Max number of results to return.", ge=1, le=100, example=10),
 ):
     qvec = embed_text(business)
 
     where = ["name ILIKE %(business)s"]
     params = {"business": f"%{business}%", "qvec": qvec, "k": k}
-    if state:
-        where.append("state = %(state)s"); params["state"] = state
+    if region:
+        where.append("state = %(region)s"); params["region"] = region
     if resource:
         where.append("industry_name ILIKE %(resource)s"); params["resource"] = f"%{resource}%"
 
@@ -68,8 +68,8 @@ def search(
                 "by similarity, so a text description can match photos directly.",
 )
 def image_search(
-    q: str = Query(..., description="Text description of the image you're looking for.", examples=["steel factory"]),
-    k: int = Query(10, description="Max number of results to return.", ge=1, le=100),
+    q: str = Query(..., description="Text description of the image you're looking for.", example="steel factory"),
+    k: int = Query(10, description="Max number of results to return.", ge=1, le=100, example=10),
 ):
     # Embed the text query into CLIP space, then match against image vectors.
     qvec = embed_text_for_clip(q)
