@@ -7,13 +7,16 @@ Then: GET /search?business=coastal fabrication with dock&state=FL&resource=metal
       GET /image_search?q=aerial view of a port
 """
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 import psycopg
 from pgvector.psycopg import register_vector
 from embeddings import embed_text, embed_text_for_clip
 
 DSN = os.environ.get("DATABASE_URL", "postgresql://postgres@localhost/search_proto")
-app = FastAPI()
+app = FastAPI(
+    title="AI Search Prototype",
+    description="Hybrid semantic + filtered search over location/industry/image data (Postgres + pgvector).",
+)
 
 
 def _conn():
@@ -22,8 +25,19 @@ def _conn():
     return conn
 
 
-@app.get("/search")
-def search(business: str, state: str | None = None, resource: str | None = None, k: int = 10):
+@app.get(
+    "/search",
+    summary="Search locations by business, state, and resource",
+    description="Filters `locations` by business name and (optionally) state/resource, "
+                "then ranks matches by semantic similarity between `business` and each "
+                "record's embedded description.",
+)
+def search(
+    business: str = Query(..., description="Business/location name (partial match) — also embedded and used to rank results semantically.", examples=["Steelworks"]),
+    state: str | None = Query(None, description="Exact match on the state/region field.", examples=["Whyalla"]),
+    resource: str | None = Query(None, description="Partial match on the industry/resource type.", examples=["Warehousing"]),
+    k: int = Query(10, description="Max number of results to return.", ge=1, le=100),
+):
     qvec = embed_text(business)
 
     where = ["name ILIKE %(business)s"]
@@ -47,8 +61,16 @@ def search(business: str, state: str | None = None, resource: str | None = None,
         return [dict(zip(cols, r)) for r in cur.fetchall()]
 
 
-@app.get("/image_search")
-def image_search(q: str, k: int = 10):
+@app.get(
+    "/image_search",
+    summary="Search location images by text description",
+    description="Embeds the query text into CLIP space and ranks `location_images` "
+                "by similarity, so a text description can match photos directly.",
+)
+def image_search(
+    q: str = Query(..., description="Text description of the image you're looking for.", examples=["steel factory"]),
+    k: int = Query(10, description="Max number of results to return.", ge=1, le=100),
+):
     # Embed the text query into CLIP space, then match against image vectors.
     qvec = embed_text_for_clip(q)
     sql = """
