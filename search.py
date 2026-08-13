@@ -28,20 +28,21 @@ def _conn():
 @app.get(
     "/search",
     summary="Search locations by business, region, and resource",
-    description="Filters `locations` by business name and (optionally) region/resource, "
-                "then ranks matches by semantic similarity between `business` and each "
-                "record's embedded description.",
+    description="Embeds `business` and ranks `locations` by semantic similarity, "
+                "optionally narrowed first by region/resource filters. `business` is "
+                "not a name match — a descriptive query works even if those words "
+                "never appear in any business name.",
 )
 def search(
-    business: str = Query(..., description="Business/location name (partial match) — also embedded and used to rank results semantically.", example="Steelworks"),
+    business: str = Query(..., description="Free-text description of the kind of business/location you want — embedded and used to rank results semantically (not a name filter).", example="coastal fabrication with dock access"),
     region: str | None = Query(None, description="Exact match on the state/region field.", example="Whyalla"),
     resource: str | None = Query(None, description="Partial match on the industry/resource type.", example="Warehousing"),
     k: int = Query(10, description="Max number of results to return.", ge=1, le=100, example=10),
 ):
     qvec = embed_text(business)
 
-    where = ["name ILIKE %(business)s"]
-    params = {"business": f"%{business}%", "qvec": qvec, "k": k}
+    where = ["TRUE"]
+    params = {"qvec": qvec, "k": k}
     if region:
         where.append("state = %(region)s"); params["region"] = region
     if resource:
