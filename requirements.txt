@@ -1,0 +1,11 @@
+# Core app
+fastapi>=0.111
+uvicorn[standard]>=0.30
+psycopg[binary]>=3.1
+pgvector>=0.3
+
+# Embeddings
+openai>=1.30            # text embeddings (hosted)
+sentence-transformers>=3.0  # CLIP image embeddings (local); also local text option
+pillow>=10.0           # image loading for CLIP
+requests>=2.31         # fetch image URLs

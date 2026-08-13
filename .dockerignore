@@ -1,0 +1,19 @@
+.env
+.git/
+.gitignore
+.vscode/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node cruft (doc-generation leftovers, not part of the app)
+node_modules/
+package.json
+package-lock.json
+gen.js
+
+# Docs / data not needed in the runtime image
+*.docx
+*.md
+sample_data.csv

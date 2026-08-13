@@ -1,0 +1,7 @@
+{
+  "python.envFile": "${workspaceFolder}/.env",
+  "files.exclude": {
+    "node_modules": true,
+    "__pycache__": true
+  }
+}
